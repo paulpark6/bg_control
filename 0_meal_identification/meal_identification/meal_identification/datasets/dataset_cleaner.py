@@ -1,5 +1,43 @@
 import pandas as pd
 
+def remove_num_meal(patient_df, num_meal):
+    """
+    Remove all days that have meals with the specified num_meal number of meals.
+
+    Parameters
+    ----------
+    patient_df : pd.DataFrame
+        The input DataFrame with columns 'msg_type', 'food_g', and a datetime index.
+    num_meal : int
+        The specific number of meals in a day to identify and remove.
+
+    Returns
+    -------
+    pd.DataFrame
+        The processed DataFrame with days containing num_meal meals removed.
+    """
+    # Ensure a 'day' column based on the date from the datetime index
+    patient_df = patient_df.copy()
+    patient_df['day'] = patient_df.index.date
+
+    # Filter to only ANNOUNCE_MEAL rows
+    announce_meal_df = patient_df[patient_df['msg_type'] == 'ANNOUNCE_MEAL']
+
+    # Count the number of meals per day
+    meal_counts = announce_meal_df.groupby('day').size()
+
+    # Identify days with the specified number of meals
+    days_to_remove = meal_counts[meal_counts == num_meal].index
+
+    # Remove rows corresponding to these days
+    result_df = patient_df[~patient_df['day'].isin(days_to_remove)]
+
+    # Drop the temporary 'day' column
+    result_df.drop(columns=['day'], inplace=True)
+
+    return result_df
+   
+
 def erase_meal_overlap_fn(patient_df, meal_length, min_carbs):
     """
     Process the DataFrame to handle meal overlaps.
@@ -110,7 +148,7 @@ def erase_consecutive_nan_values(patient_df: pd.DataFrame, max_consecutive_nan_v
     days_to_keep = []
     for day, day_data in df.groupby('day'):
         # Get boolean mask of NaN values
-        nan_mask = day_data['food_g'].isnull()
+        nan_mask = day_data['bgl'].isnull()
         
         # Count consecutive NaNs
         consecutive_nans = 0
@@ -133,6 +171,6 @@ def erase_consecutive_nan_values(patient_df: pd.DataFrame, max_consecutive_nan_v
     result_df.drop('day', axis=1, inplace=True)
     
     # Drop remaining NaN values since they consecutively dont form a long enough chain
-    result_df = result_df.dropna(subset=['food_g'])
+    result_df = result_df.dropna(subset=['bgl'])
     
     return result_df
