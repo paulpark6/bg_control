@@ -331,7 +331,7 @@ def jonathan_g(df, user_id):
 def julia_z():
     return None
 
-def junwon_p(df, n_days=3, agg_interval=None):
+def junwon_p(df, n_days=3, agg_interval=None): # test change
     """
     Processes change in BGL over second (slope/differenced) and plots trends for randomly selected consecutive days.
     Also plots the original plot to see/compare changes in slopes and actual data.
